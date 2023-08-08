@@ -1,0 +1,15 @@
+C:\code\ixla\test\Project\Project_client\Project_client\bin\Debug\net7.0\Project_client.exe
+C:\code\ixla\test\Project\Project_client\Project_client\bin\Debug\net7.0\Project_client.deps.json
+C:\code\ixla\test\Project\Project_client\Project_client\bin\Debug\net7.0\Project_client.runtimeconfig.json
+C:\code\ixla\test\Project\Project_client\Project_client\bin\Debug\net7.0\Project_client.dll
+C:\code\ixla\test\Project\Project_client\Project_client\bin\Debug\net7.0\Project_client.pdb
+C:\code\ixla\test\Project\Project_client\Project_client\obj\Debug\net7.0\Project_client.csproj.AssemblyReference.cache
+C:\code\ixla\test\Project\Project_client\Project_client\obj\Debug\net7.0\Project_client.GeneratedMSBuildEditorConfig.editorconfig
+C:\code\ixla\test\Project\Project_client\Project_client\obj\Debug\net7.0\Project_client.AssemblyInfoInputs.cache
+C:\code\ixla\test\Project\Project_client\Project_client\obj\Debug\net7.0\Project_client.AssemblyInfo.cs
+C:\code\ixla\test\Project\Project_client\Project_client\obj\Debug\net7.0\Project_client.csproj.CoreCompileInputs.cache
+C:\code\ixla\test\Project\Project_client\Project_client\obj\Debug\net7.0\Project_client.dll
+C:\code\ixla\test\Project\Project_client\Project_client\obj\Debug\net7.0\refint\Project_client.dll
+C:\code\ixla\test\Project\Project_client\Project_client\obj\Debug\net7.0\Project_client.pdb
+C:\code\ixla\test\Project\Project_client\Project_client\obj\Debug\net7.0\Project_client.genruntimeconfig.cache
+C:\code\ixla\test\Project\Project_client\Project_client\obj\Debug\net7.0\ref\Project_client.dll
