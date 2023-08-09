@@ -1,0 +1,16 @@
+Partendo dal progetto della chat, creare un’applicazione client server con i seguenti requisiti: 
+
+###SERVER
+-	Deve supportare comandi come nell’esercizio dei contatti 
+    -	Crea Contatto 
+    -	Elimina Contatto
+    -	Trova Contatto 
+-	Ogni volta che il server riceve un comando, dopo averlo eseguito, deve mandare una conferma al client dopo l’esecuzione. In caso di errore deve inviare un messaggio di errore. 
+-	Deve essere in grado di gestire più client contemporaneamente
+-	Deve gestire la disconnessione dei client (no deve crashare quando un client si disconnette)
+
+###CLIENT
+-	Deve connettersi al server
+-	Accettare i comandi leggendo input da tastiera e inviarli al server. 
+
+Tutti i messaggi tra client e server devono essere serializzati in JSON. 

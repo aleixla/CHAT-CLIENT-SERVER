@@ -1,0 +1,10 @@
+C:\code\ixla\test\Project\Project_client\Projetc_contact_server\bin\Debug\Projetc_contact_server.exe
+C:\code\ixla\test\Project\Project_client\Projetc_contact_server\bin\Debug\Projetc_contact_server.pdb
+C:\code\ixla\test\Project\Project_client\Projetc_contact_server\obj\Debug\Projetc_contact_server.csproj.AssemblyReference.cache
+C:\code\ixla\test\Project\Project_client\Projetc_contact_server\obj\Debug\Projetc_contact_server.csproj.SuggestedBindingRedirects.cache
+C:\code\ixla\test\Project\Project_client\Projetc_contact_server\obj\Debug\Projetc_contact_server.csproj.CoreCompileInputs.cache
+C:\code\ixla\test\Project\Project_client\Projetc_contact_server\obj\Debug\Projetc_contact_server.exe
+C:\code\ixla\test\Project\Project_client\Projetc_contact_server\obj\Debug\Projetc_contact_server.pdb
+C:\code\ixla\test\Project\Project_client\Projetc_contact_server\bin\Debug\Newtonsoft.Json.dll
+C:\code\ixla\test\Project\Project_client\Projetc_contact_server\bin\Debug\Newtonsoft.Json.xml
+C:\code\ixla\test\Project\Project_client\Projetc_contact_server\obj\Debug\Projetc_contact_server.csproj.CopyComplete
