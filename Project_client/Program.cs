@@ -6,54 +6,72 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-public class Program
+public class Client
 {
-   public static async Task Main(string[] args)
-   {
-      
-      string serverIP = "192.168.3.232";
-      int serverPort = 5555;
+    private static TcpClient client { get; set; }
+    private static NetworkStream stream { get; set; }
 
-      TcpClient client = new TcpClient();
-      client.Connect(serverIP, serverPort);
+    public static void Main(string[] args)
+    {
+        string serverIP = "192.168.3.232";
+        int serverPort = 5555;
 
-      Console.WriteLine("Connected to the server.");
+        client = new TcpClient();
+        client.Connect(serverIP, serverPort);
 
-      NetworkStream stream = client.GetStream();
+        Console.WriteLine("Connected to the server.");
+        
+        stream = client.GetStream();
 
-      string message;
-      while (true)
-      {
-         Console.WriteLine("enter the message: ");
-         message = Console.ReadLine();
+        Thread receiveThread = new Thread(ReceiveMessages);
+        receiveThread.Start();
 
-         if (message.ToLower() == "exit")
-         {
-            break; 
-         }
+        Thread sendThread = new Thread(SendMessage);
+        sendThread.Start();
+        
+       
+    }
 
-         byte[] sendData = Encoding.ASCII.GetBytes(message);
-
-         stream.Write(sendData, 0, sendData.Length);
-         Console.WriteLine("Message sent to the server");
-
-         try
-         {
-            byte[] receiveData = new byte[1024];
-            int bytes = stream.Read(receiveData, 0, receiveData.Length);
-            string serverResponse = Encoding.ASCII.GetString(receiveData, 0, bytes);
-            Console.WriteLine("Response from the client: " + serverResponse);
-         }
-         catch (Exception ex)
-         {
+    private static void ReceiveMessages()
+    {
+        try
+        {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+         
+            while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+               
+                Console.WriteLine("response of the client: " + message);
+            }
+        }
+        catch (Exception ex)
+        {
             Console.WriteLine("An error occurred: " + ex.Message);
-         }  
-      }
+        }
+        Console.WriteLine("-----------------------------------------");
+    }
 
-     
-      Console.WriteLine("Connection closed.");
-   }
-   
+    private static void SendMessage()
+    {
+       try
+       {
+           while (true)
+           {
+               Console.WriteLine("write message...");
+               string message = Console.ReadLine();
+               byte[] buffer = Encoding.ASCII.GetBytes(message);
+               stream.Write(buffer, 0, buffer.Length);
+           }
+       }
+       catch (Exception ex)
+       {
+           Console.WriteLine("An error occurred: " + ex.Message);
+       }
+
+      
+    }
 }
 
 
