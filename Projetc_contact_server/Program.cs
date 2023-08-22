@@ -1,5 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
+using System.Collections.Concurrent;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -7,118 +9,188 @@ using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Projetc_contact_server
+namespace ContactServer
 {
     public class Program
     {
+       
+        static ConcurrentDictionary<string, Contact> contacts = new ConcurrentDictionary<string, Contact>();
+        static string dataFilePath = "C:\\code\\ixla\\test\\Project\\Project_client\\Projetc_contact_server\\contact_server.json"; // Path to the JSON data file
+
         public static void Main(string[] args)
         {
-            Server server = new Server("192.168.3.232", 5555);
-            string start = Console.ReadLine();
-            server.HandleClient(start);
-            Console.WriteLine("Connected to the server.");
-            
+          
+
+            int port = 5555;
+            TcpListener listener = new TcpListener(IPAddress.Any, port);
+            listener.Start();
+            Console.WriteLine("Server start. Loading connection...");
+
+            while (true)
+            {
+                TcpClient client = listener.AcceptTcpClient();
+                Console.WriteLine("accept new connection.");
+
+                Thread clientThread = new Thread(() => HandleClient(client));
+                clientThread.Start();
+            }
         }
-    }
-    public class Server
-    {
-            public string ServerIp { get; set; }
-            public int ServerPort { get; set; }
-            public List<TcpClient> ConnectedClients { get; set; }
 
-            public Server(string serverIP, int serverPort)
+        public  static void HandleClient(TcpClient client)
+        {
+            NetworkStream stream = client.GetStream();
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            try
             {
-                ServerIp = serverIP;
-                ServerPort = serverPort;
-                ConnectedClients = new List<TcpClient>();
 
-                TcpListener listener = new TcpListener(IPAddress.Parse(serverIP), serverPort);
-                listener.Start();
-                Console.WriteLine("Server started. Waiting for incoming connections...");
-                
-                // Inizia ad ascoltare le connessioni in entrata
-                while(true)
+                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
                 {
-                    TcpClient client = listener.AcceptTcpClient();
-
-                    // Aggiungi il client alla lista di client connessi
-                    ConnectedClients.Add(client);
-
-                    // Gestisci il client in un thread separato
-                    Thread clientThread = new Thread(HandleClient);
-                    clientThread.Start(client);
-                }
-            }
-            public void HandleClient(object obj)
-            {
-                TcpClient client = (TcpClient)obj;
-                NetworkStream stream = client.GetStream();
-
-                bool isRunning = true;
-                while (isRunning)
-                {
-                    byte[] buffer = new byte[1024];
-                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
-        
-                    string dataReceived = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                    Console.WriteLine(dataReceived);
-
-                    if (dataReceived.ToLower() == "exit")
+                    string data = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    Console.WriteLine(data);
+                    JObject request;
+                    
+                    try
                     {
-                        isRunning = false;
+                        request = JObject.Parse(data);
                     }
-                    else
+                    catch (JsonReaderException)
                     {
-                        // Verifica che l'oggetto JSON ricevuto sia valido
-                        MyObject myObject;
-                        if (TryDeserializeJson<MyObject>(dataReceived, out myObject))
-                        {
-                            Console.WriteLine($"Received MyObject: {myObject.Name}, {myObject.Surname}, {myObject.PhoneNumber},{myObject.Note}");
+                        // Handle JSON parsing error
+                        JObject errorResponse = new JObject();
+                        errorResponse["error"] = "Invalid JSON format.";
+                        byte[] errorBytes = Encoding.UTF8.GetBytes(errorResponse.ToString());
+                        stream.Write(errorBytes, 0, errorBytes.Length);
+                        stream.Flush();// Cancella i buffer del flusso e fa si che i dati memorizzati nel buffer vengano scritti nel file
+                        continue; // Skip processing invalid JSON
+                    }
 
-                            // Invia il messaggio ricevuto a tutti i client connessi tranne quello che ha inviato il messaggio
-                            foreach (TcpClient connectedClient in ConnectedClients)
+                    string command = request["Command"].ToString();
+                    JObject response = new JObject();
+
+                    switch (command)
+                    {
+                        case "insert":
+                            string contact = Guid.NewGuid().ToString();
+                            // Restituisce una rappresentazione di stringa del valore di questa istanza della classe Guid
+                            Contact newContact = request["Contact_insert"].ToObject<Contact>();
+                           // contacts = new ConcurrentDictionary<string, Contact>();
+                            LoadContactsFromFile();
+                            contacts.TryAdd(contact, newContact);
+                            SaveContactsToFile(); // Save contacts after adding a new one
+                            response["message"] = "Contact create.";
+                            break;
+
+                        case "delete":
+                            string deleteContactId = request["Contact"].ToString();
+                            if (contacts.TryRemove(deleteContactId, out _))
                             {
-                                if (connectedClient != client)
-                                {
-                                    NetworkStream connectedStream = connectedClient.GetStream();
-                                    byte[] responseBuffer = Encoding.ASCII.GetBytes(dataReceived);
-                                    connectedStream.Write(responseBuffer, 0, responseBuffer.Length);
-                                }
+                                LoadContactsFromFile();
+                                SaveContactsToFile(); // Save contacts after removal
+                                response["message"] = "Contact delete successfully.";
                             }
-                        }
-                        else
-                        {
-                            Console.WriteLine("Received data is not a valid MyObject JSON.");
-                        }
+                            else
+                            {
+                                response["error"] = "Contact not found.";
+                            }
+
+                            break;
+
+                        case "search":
+                            string searchContactId = request["Name"].ToString();
+                            if (contacts.TryGetValue(searchContactId, out Contact foundContact))
+                            {
+                                LoadContactsFromFile();
+                                response["Contact_search"] = JObject.FromObject(foundContact);
+                                Console.WriteLine("contact found:");
+                               // Console.WriteLine($"Command:{foundContact.Command}");
+                                Console.WriteLine($"Name: {foundContact.Name}");
+                                Console.WriteLine($"Surname: {foundContact.Surname}");
+                                Console.WriteLine($"Phone Number: {foundContact.PhoneNumber}");
+                                Console.WriteLine($"Note: {foundContact.Note}");
+                            }
+                            else
+                            {
+                                response["error"] = "Contact not found.";
+                            }
+                            break;
+                        case "list":
+                            LoadContactsFromFile();
+                           var contactList = contacts.Values.ToList();
+                            response["Contacts_list"] = JArray.FromObject(contactList); //metodo per creare un array
+                            break;
+                    
+                        default:
+                            response["error"] = "Command not valid.";
+                            break;
                     }
+
+                    byte[] responseBytes = Encoding.UTF8.GetBytes(response.ToString());
+                    stream.Write(responseBytes, 0, responseBytes.Length);
+                    stream.Flush();
                 }
-             
+            }
+            catch (Exception ex)
+            {
+                
+                Console.WriteLine("Error when reading from the stream: " + ex.Message + "\n" + ex.StackTrace);
             }
 
-            private bool TryDeserializeJson<T>(string json, out T result)
+            Console.WriteLine("Client disconnected.");
+            client.Close();
+        }
+
+        public  static void LoadContactsFromFile()
+        {
+            if (File.Exists(dataFilePath))
             {
                 try
                 {
-                    result = JsonConvert.DeserializeObject<T>(json);
-                    return true;
+                    string jsonData = File.ReadAllText(dataFilePath);
+                 
+                    contacts = JsonConvert.DeserializeObject<ConcurrentDictionary<string, Contact>>(jsonData);
+                   
                 }
-                catch
+                catch (Exception ex)
                 {
-                    result = default(T);
-                    return false;
+                    Console.WriteLine("Error loading contacts: " + ex.Message);
                 }
             }
-    }
+           
+        }
 
-    public class MyObject
+        public static void SaveContactsToFile()
+        {
+            try
+            {
+                string jsonData = JsonConvert.SerializeObject(contacts);
+                File.WriteAllText(dataFilePath, jsonData);
+             
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("error save"+ex.Message);
+            }
+           
+        }
+    }
+//
+    public class Contact
     {
+        [JsonProperty("Name")]
         public string Name { get; set; }
+
+        [JsonProperty("Surname")]
         public string Surname { get; set; }
+
+        [JsonProperty("PhoneNumber")]
         public string PhoneNumber { get; set; }
+
+        [JsonProperty("Note")]
         public string Note { get; set; }
+        
     }
-
-
 }
+
 
 
