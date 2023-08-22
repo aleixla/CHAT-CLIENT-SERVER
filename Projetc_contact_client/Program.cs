@@ -76,6 +76,7 @@ namespace ContactClient
                     }
                     if (exitRequested)
                         break;
+                    
 
                     byte[] requestBytes = Encoding.UTF8.GetBytes(request.ToString()); //UTF8 CODIFICA DEI CARATTERI
                     stream.Write(requestBytes, 0, requestBytes.Length);

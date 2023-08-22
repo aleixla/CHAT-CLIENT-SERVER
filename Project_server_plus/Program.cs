@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System; 
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -18,8 +18,6 @@ namespace Project_server_plus
             server.HandleClient(start);
         }
     }
-
-
     public class Server
     {
         public string ServerIp { get; set; }
@@ -55,25 +53,37 @@ namespace Project_server_plus
             TcpClient client = (TcpClient)obj;
             NetworkStream stream = client.GetStream();
 
-            // Esempio di lettura dei dati inviati dal client
-            byte[] buffer = new byte[1024];
-            int bytesRead = stream.Read(buffer, 0, buffer.Length);
-            string dataReceived = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-            Console.WriteLine(dataReceived);
-
-            // Invia il messaggio ricevuto a tutti i client connessi tranne quello che ha inviato il messaggio
-            foreach (TcpClient connectedClient in ConnectedClients)
+            bool isRunning = true;
+            while (isRunning)
             {
-                if (connectedClient != client)
+                // Esempio di lettura dei dati inviati dal client
+                byte[] buffer = new byte[1024];
+                int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                string dataReceived = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                Console.WriteLine(dataReceived);
+
+                if (dataReceived == "exit")
                 {
-                    NetworkStream connectedStream = connectedClient.GetStream();
-                    byte[] responseBuffer = Encoding.ASCII.GetBytes(dataReceived);
-                    connectedStream.Write(responseBuffer, 0, responseBuffer.Length);
+                    // Se viene ricevuto il messaggio "exit", termina la connessione con questo client
+                    isRunning = false;
+                }
+                else
+                {
+                    // Invia il messaggio ricevuto a tutti i client connessi tranne quello che ha inviato il messaggio
+                    foreach (TcpClient connectedClient in ConnectedClients)
+                    {
+                        if (connectedClient != client)
+                        {
+                            NetworkStream connectedStream = connectedClient.GetStream();
+                            byte[] responseBuffer = Encoding.ASCII.GetBytes(dataReceived);
+                            connectedStream.Write(responseBuffer, 0, responseBuffer.Length);
+                        }
+                    }
                 }
             }
 
             // Chiudi la connessione con il client
-            // client.Close();
+            client.Close();
         }
     }
 }
